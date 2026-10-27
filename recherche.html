@@ -56,6 +56,9 @@ main { padding: 14px 0 60px; }
 #status { color: var(--muted); font-size: 13px; margin: 2px 0 12px; }
 .group h2 { font-size: 14px; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin: 22px 0 8px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
 .blk { background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--kc, var(--accent)); border-radius: 10px; padding: 10px 14px; margin: 0 0 10px; box-shadow: var(--shadow); }
+.blk .li { margin: 2px 0 6px; font-style: italic; }
+.rub { border: 1px dashed var(--line); border-radius: 12px; padding: 8px 8px 0; margin: 0 0 12px; }
+.rubh { color: var(--muted); font-size: 12.5px; margin: 0 4px 8px; }
 .blk .hd { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
 .badge { font-size: 11px; font-weight: 600; color: var(--kc); border: 1px solid var(--kc); border-radius: 999px; padding: 0 8px; white-space: nowrap; }
 .blk .ti { font-weight: 650; font-size: 15.5px; }
@@ -94,7 +97,7 @@ mark { background: var(--mark); color: inherit; border-radius: 2px; padding: 0 1
 #pv h3.H2 { font-size: 15.5px; color: var(--accent); margin: 18px 0 6px; }
 #pv .blk { box-shadow: none; }
 #pv .blk.hit { border-color: var(--k-cr); }
-#pv .blk.target { outline: 3px solid var(--mark); outline-offset: 2px; }
+#pv .blk.target, .rub .blk.target { outline: 3px solid var(--mark); outline-offset: 2px; }
 #pv .blk .bc, #pv .blk .tools a { display: none; }
 .figs { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 6px; }
 .figs img { max-height: 220px; max-width: 100%; border-radius: 6px; border: 1px solid var(--line); background: #fff; cursor: zoom-in; }
@@ -181,7 +184,7 @@ mark { background: var(--mark); color: inherit; border-radius: 2px; padding: 0 1
   <div class="top">
     <h1><a id="brand" href="#" style="color:inherit;text-decoration:none">BAK'S Radiology</a></h1>
     <div class="searchbox"><input id="q" type="search" placeholder="Pathologie, signe, mesure…  ex. kyste hydatique, « double contour », appendicite -enfant" autocomplete="off" disabled><div id="sugg"></div></div>
-    <nav class="sitenav" id="sitenav" hidden><a id="nav-cours" href="#resumes">Résumés</a><a id="nav-rech" href="#recherche">Recherche</a><a id="nav-prog" href="#maj">Progression</a></nav>
+    <nav class="sitenav" id="sitenav" hidden><a id="nav-prog" href="progression.html">Progression</a><a id="nav-cours" href="index.html">Résumés</a><a href="sources.html">Sources</a><a href="jfr.html">JFR</a><a id="nav-rech" href="recherche.html">Recherche</a></nav>
     <button class="icon-btn" id="theme" title="Thème clair / sombre">◐</button>
   </div>
   <div class="filters" id="filtersrow">
@@ -228,7 +231,7 @@ const store = { get(k, d) { try { const v = localStorage.getItem('dems_' + k); r
 const ORDER = ['Carte', 'Valeurs à retenir', 'Cas clinique', 'Pièges', 'Compte rendu type', 'Formulations du service', 'L’essentiel', 'Comprendre', 'Texte', 'Tableau', 'À retenir', 'Encadré', 'Figure'];
 const KCLASS = k => ({ 'Carte': 'Carte', 'Valeurs à retenir': 'Valeurs', 'Compte rendu type': 'CR', 'Formulations du service': 'CR', 'Texte': 'Texte', 'Figure': 'Figure', 'Tableau': 'Tableau', 'Cas clinique': 'Cas' }[k] || 'Box');
 const KBOOST = { 'Carte': 1.5, 'Valeurs à retenir': 1.35, 'Compte rendu type': 1.2, 'Formulations du service': 1.2, 'L’essentiel': 1.1, 'Tableau': 1.05, 'Texte': 1, 'Comprendre': 0.95, 'À retenir': 1.1, 'Pièges': 1.05, 'Encadré': 1, 'Figure': 0.75 };
-let D, B, INV, VOCAB, NB, AVG, SYN, TITLES, DOCB, PHON, DOCKEY;
+let D, B, INV, VOCAB, NB, AVG, SYN, TITLES, DOCB, PHON, DOCKEY, SEC;
 const docHref = (d, b) => (b && b.g != null) ? d.p + '#b' + b.g : encodeURI(d.p).replace(/#/g, '%23');
 const openLabel = d => /\.docx$/i.test(d.p) ? 'Ouvrir dans Word' : 'Ouvrir la page';
 const nf = n => n.toLocaleString('fr-FR');
@@ -247,7 +250,7 @@ async function load() {
   INV = new Map(); let total = 0;
   B.forEach((b, i) => {
     const doc = D.docs[b.d];
-    b.body = b.x != null ? b.x : (b.r || []).map(r => r.join(' — ')).join('\n');
+    b.body = (b.li ? b.li + '\n' : '') + (b.x != null ? b.x : (b.r || []).map(r => r.join(' — ')).join('\n'));
     b.path = [doc.n, ...(b.h || [])].join(' ');
     b.fold = fold(b.t + '\n' + b.body);
     b.tf = fold(b.t + ' ' + (b.h || []).join(' '));
@@ -262,6 +265,8 @@ async function load() {
   D.docs.forEach(d => { d.nf = fold(d.n); d.f = d.f || d.p.split('/').pop(); });
   DOCKEY = new Map(D.docs.map((d, i) => [d.th + '/' + d.f, i]));
   DOCB = D.docs.map(() => []); B.forEach((b, i) => DOCB[b.d].push(i));
+  // rubriques : blocs d'un même titre (un texte coupé par un tableau ou une figure se relit dans son contexte)
+  SEC = new Map(); B.forEach((b, i) => { if (b.s != null) { const key = b.d + ':' + b.s; if (!SEC.has(key)) SEC.set(key, []); SEC.get(key).push(i); } });
   SYN = new Map(); D.syn.forEach(g => { const fs = g.map(x => toks(x).join(' ')); fs.forEach(f => SYN.set(f, fs)); });
   const seen = new Set(); TITLES = [];
   B.forEach((b, i) => { if ((b.k === 'Carte' || b.k === 'Valeurs à retenir') && !seen.has(b.t)) { seen.add(b.t); TITLES.push([fold(b.t), b.t, D.docs[b.d].n]); } });
@@ -448,6 +453,7 @@ function hl(text, terms, phrases) {
 }
 function blockHTML(i, terms, phrases, full) {
   const b = B[i], d = D.docs[b.d];
+  const sec = (!full && SEC && b.s != null) ? SEC.get(b.d + ':' + b.s) : null;
   const href = docHref(d, b);
   const bc = [`<a href="${href}" title="${openLabel(d)}">${esc(d.n)}</a>`, ...(b.h || []).map(esc)].join(' › ');
   let body = '';
@@ -462,9 +468,10 @@ function blockHTML(i, terms, phrases, full) {
       data.map(r => '<tr>' + r.map(c => `<td>${hl(c, terms, phrases)}</td>`).join('') + '</tr>').join('') + '</table></div>' +
       (hidden ? `<div class="tools"><button data-full="${i}">Afficher les ${hidden} autres lignes</button></div>` : '');
   } else body = `<div class="tx">${hl(b.x, terms, phrases)}</div>`;
+  if (b.li) body = `<p class="li">${hl(b.li, terms, phrases)}</p>` + body;
   if (b.im) body = `<div class="figs">${b.im.map(n => `<img loading="lazy" src="${D.imgdir}${n}.jpg" alt="Figure" data-zoom="1">`).join('')}</div>` + body + (b.cr ? `<div class="bc">${esc(b.cr)}</div>` : '');
   return `<div class="blk k-${KCLASS(b.k)}" data-i="${i}" id="b${i}"><div class="hd"><span class="badge">${esc(b.k)}</span><span class="ti pv" data-pv="${i}" title="Aperçu dans le document">${hl(b.t, terms, phrases)}</span></div>
-    <div class="bc">${esc(d.th)} › ${bc}</div>${body}<div class="tools"><button data-pv="${i}">Aperçu</button><button data-copy="${i}">Copier</button><a href="${href}">${openLabel(d)}</a></div></div>`;
+    <div class="bc">${esc(d.th)} › ${bc}</div>${body}<div class="tools">${sec && sec.length > 1 ? `<button data-sec="${i}">Rubrique complète (${sec.length} blocs)</button>` : ''}<button data-pv="${i}">Aperçu</button><button data-copy="${i}">Copier</button><a href="${href}">${openLabel(d)}</a></div></div>`;
 }
 let LAST = null, SHOWN = 0;
 function render(append) {
@@ -579,6 +586,8 @@ $('#res').addEventListener('click', e => {
   if (e.target.classList.contains('more')) { render(true); return; }
   if (pv) { preview(+pv.dataset.pv); return; }
   if (f != null) { const el = e.target.closest('.blk'); el.outerHTML = blockHTML(+f, LAST.terms, LAST.phrases || [], true); return; }
+  if (e.target.dataset.sec != null) { const b = B[+e.target.dataset.sec], el = e.target.closest('.blk'), ids = SEC.get(b.d + ':' + b.s);
+    el.outerHTML = '<div class="rub"><div class="rubh">Rubrique complète : ' + esc((b.h || []).slice(-1)[0] || b.t) + '</div>' + ids.map(j => blockHTML(j, LAST.terms, LAST.phrases || [], true).replace('class="blk', 'class="blk' + (j === +e.target.dataset.sec ? ' target' : ''))).join('') + '</div>'; return; }
   if (c != null) { const b = B[+c]; const t = b.t + '\n' + (b.r ? b.r.map(r => r.join(' : ')).join('\n') : b.x);
     (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => { e.target.textContent = 'Copié ✓'; setTimeout(() => e.target.textContent = 'Copier', 1500); }).catch(() => {}); }
 });
@@ -645,8 +654,33 @@ function showMaj() {
       ${dems.length ? `<details open><summary>Face au cours DEMS · ${dems.length}</summary><ul>${dems.map(x => `<li class="dems"><span class="muted small">${esc(x.s)} — </span>${esc(x.x)}</li>`).join('')}</ul></details>` : ''}
       ${[...secs].map(([s, l]) => `<details><summary>${esc(s || 'Divers')} · ${l.length}</summary><ul>${l.map(x => `<li class="${x.dems ? 'dems' : ''}">${esc(x.x)}</li>`).join('')}</ul></details>`).join('')}</div>`;
   }
-  $('#vmaj').innerHTML = h;
+  $('#vmaj').innerHTML = showV22() + h;
   $('#vmaj').querySelectorAll('.trow').forEach(r => r.onclick = () => $('#td' + r.dataset.t).classList.toggle('open'));
+}
+// ---------- tableau de bord V2.2 (JFR 2025) ----------
+function showV22() {
+  const V = D.maj && D.maj.v22; if (!V) return '';
+  const docs = V.docs, nb = e => docs.filter(d => d.etat === e).length;
+  const ok = nb('vérifié') + nb('intégré'), pct = Math.round(100 * ok / docs.length);
+  const pill = e => ({ 'fait': 'ok', 'vérifié': 'ok', 'intégré': 'ok', 'en cours': 'dems', 'partiel': 'dems' }[e] || '');
+  const ordre = { 'en cours': 0, 'à faire': 1, 'à décider': 2, 'en attente': 3, 'fait': 4 };
+  const T = [...V.taches].sort((a, b) => (ordre[a.etat] ?? 9) - (ordre[b.etat] ?? 9));
+  let h = `<div class="sec-title">Tableau de bord V2.2 — intégration des JFR 2025 (Médiathèque SFR)</div>
+    <div class="card"><div class="hero"><div class="big">${pct} %</div><div><div style="font-weight:650;font-size:16px">${ok} résumés intégrés sur ${docs.length} (${nb('vérifié')} contrôlés)</div>
+      <div class="bar" style="margin:8px 0"><i style="width:${pct}%"></i></div>
+      <div class="muted small">${nb('partiel')} commencés · ${nb('à faire')} à faire · ${docs.reduce((a, d) => a + d.n, 0)} présentations · ${docs.reduce((a, d) => a + d.jfr, 0)} ajouts étiquetés [JFR 2025] · tâches mises à jour le ${esc(V.maj)}</div></div></div></div>
+    <details class="card"><summary style="font-weight:650">Comment l’intégration est faite</summary><ul>${V.methode.map(x => `<li>${esc(x)}</li>`).join('')}</ul></details>
+    <div class="sec-title">Tâches · ${T.filter(t => t.etat !== 'fait').length} ouvertes</div><div class="card"><table>
+      ${T.map(t => `<tr><td class="muted small">${esc(t.id)}</td><td class="muted small">${esc(t.etape)}</td><td>${esc(t.titre)}</td><td><span class="pill ${pill(t.etat)}">${esc(t.etat)}</span></td></tr>`).join('')}</table></div>
+    <div class="sec-title">Résumés par thème (cliquer pour le détail)</div><div class="card" style="padding:4px 12px">`;
+  const ths = new Map(); docs.forEach(d => { if (!ths.has(d.th)) ths.set(d.th, []); ths.get(d.th).push(d); });
+  [...ths].sort().forEach(([th, l], k) => {
+    const d = l.filter(x => x.etat === 'vérifié' || x.etat === 'intégré').length;
+    const st = d === l.length ? ['ok', 'terminé'] : (d || l.some(x => x.etat === 'partiel')) ? ['part', 'en cours'] : ['todo', 'à faire'];
+    h += `<div class="trow" data-t="v${k}"><span>${esc(th)}</span><div class="bar"><i style="width:${Math.round(100 * d / l.length)}%"></i></div><span class="small">${d} / ${l.length}</span><span class="st ${st[0]}">${st[1]}</span></div>
+      <div class="tdocs" id="tdv${k}"><table>${l.map(x => `<tr><td class="muted small">${esc(x.tag)}</td><td>${esc(x.t)}</td><td class="muted small">${x.n} prés.</td><td class="muted small">${x.jfr ? x.jfr + ' ajouts' : ''}</td><td><span class="pill ${pill(x.etat)}">${esc(x.etat)}</span></td><td class="muted small">mission ${esc(x.mission)}</td></tr>`).join('')}</table></div>`;
+  });
+  return h + `</div><div class="sec-title">Version 2.1 (étape précédente)</div>`;
 }
 
 // ---------- thème ----------

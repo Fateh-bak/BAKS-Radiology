@@ -1,7 +1,12 @@
 :root { color-scheme: light; --bg: #f6f7f9; --surface: #fff; --ink: #1d2433; --muted: #5b6474; --line: #dde1e8; --accent: #1f4e79; --accent-soft: #e5eef7;
   --k-carte: #1f4e79; --k-val: #2e7d32; --k-cr: #8a4b00; --k-box: #5b4b8a; --k-txt: #4a5568; --k-fig: #7a5c00; --k-tab: #00695c; }
-@media (prefers-color-scheme: dark) { :root { color-scheme: dark; --bg: #12151b; --surface: #1b2029; --ink: #e6e9ef; --muted: #9aa3b2; --line: #2c3340; --accent: #8cb8e6; --accent-soft: #223246;
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { color-scheme: dark; --bg: #12151b; --surface: #1b2029; --ink: #e6e9ef; --muted: #9aa3b2; --line: #2c3340; --accent: #8cb8e6; --accent-soft: #223246;
   --k-carte: #8cb8e6; --k-val: #7fc98a; --k-cr: #e2a35c; --k-box: #b3a4e6; --k-txt: #b5bdc9; --k-fig: #d9bf6a; --k-tab: #6fd0c0; } }
+:root[data-theme="dark"] { color-scheme: dark; --bg: #12151b; --surface: #1b2029; --ink: #e6e9ef; --muted: #9aa3b2; --line: #2c3340; --accent: #8cb8e6; --accent-soft: #223246;
+  --k-carte: #8cb8e6; --k-val: #7fc98a; --k-cr: #e2a35c; --k-box: #b3a4e6; --k-txt: #b5bdc9; --k-fig: #d9bf6a; --k-tab: #6fd0c0; }
+:root[data-theme="light"] { color-scheme: light; }
+.themebtn { background: none; border: 1px solid var(--line); color: var(--ink); border-radius: 8px; padding: 3px 9px; margin-left: 14px; cursor: pointer; font-size: 15px; }
+
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.55 -apple-system, "Segoe UI", Roboto, Calibri, sans-serif; }
 a { color: var(--accent); }
@@ -66,3 +71,4 @@ th { background: var(--accent-soft); }
   .content h2 { font-size: 18px; }
   .content h3 { font-size: 16px; }
 }
+.blk .li { margin: 2px 0 6px; font-style: italic; }
