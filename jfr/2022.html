@@ -1,0 +1,58 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JFR 2022 — BAK&#x27;S Radiology</title><meta name="robots" content="noindex,nofollow"><link rel="stylesheet" href="../site.css"><link rel="stylesheet" href="../web.css">
+<script>try { var t = JSON.parse(localStorage.getItem('dems_theme')); if (t) document.documentElement.dataset.theme = t; } catch (e) {}</script></head><body>
+<header class="top"><div class="wrap"><a class="brand" href="../index.html">BAK&#x27;S Radiology</a><div><nav><a href="../progression.html">Progression</a><a href="../index.html">Résumés</a><a href="../legers.html">Résumés légers</a><a href="../sources.html">Sources</a><a href="../jfr.html">JFR</a><a href="../posters.html">Posters</a><a href="../recherche.html">Recherche</a></nav><button class="themebtn" id="themebtn" title="Thème clair / sombre">◐</button></div></div></header>
+<main class="wrap"><p class="crumbs"><a href="../jfr.html">JFR</a> › 2022</p><h1>JFR 2022</h1><p class="muted">0 présentations · 0 utilisées dans les résumés · 0 avec diapositives · 0 passages [JFR 2022] dans les résumés</p><div class="tabs"><a class="on" data-tab="t">Présentations</a><a data-tab="p">Passages dans les résumés</a></div><div class="searchbar"><input type="search" id="q" placeholder="Titre, orateur, séance, notes…" autofocus><select id="usage" aria-label="Utilisation"><option value="">Toutes les présentations</option><option value="r">Utilisées dans un résumé</option><option value="d">Avec diapositives</option></select><select id="type" aria-label="Type"><option value="">Tous les types</option></select><select id="soc" aria-label="Société"><option value="">Toutes les sociétés</option></select></div><p class="muted" id="count"></p><div id="out"></div><script type="application/json" id="data">{"talks":[],"pass":[],"docs":{}}</script><script>const fold = s => (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+const D = JSON.parse(document.getElementById('data').textContent), $ = id => document.getElementById(id);
+const E = s => (s || '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+D.talks.forEach(t => { t.ft = fold(t.t); t.fa = fold([t.t, t.se, t.o, t.so, t.m, t.p.join(' '), t.v.join(' '), t.c].join(' ')); });
+D.pass.forEach(p => { p.fa = fold([p.dt, p.t, p.x].join(' ')); });
+let tab = 't';
+function hl(s, w) { s = E(s); if (!w.length) return s; const f = fold(s); let out = '', i = 0;
+  const re = new RegExp('\\b(' + w.map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|') + ')[a-z0-9]*', 'g'); let m;
+  while ((m = re.exec(f))) { out += s.slice(i, m.index) + '<mark>' + s.slice(m.index, m.index + m[0].length) + '</mark>'; i = m.index + m[0].length; }
+  return out + s.slice(i); }
+function words() { return fold($('q').value).split(/[^a-z0-9]+/).filter(x => x.length > 1 && !['le','la','les','de','des','du','et','en','un','une'].includes(x)); }
+function match(fa, w) { return w.every(x => new RegExp('\\b' + x.replace(/(es|e|s|x)$/, '')).test(fa)); }
+function talkHtml(t, w) {
+  const meta = [t.ty, t.so, t.se, t.o, t.dt].filter(Boolean).map(E).join(' · ');
+  const chips = t.r.map(r => D.docs[r] ? `<a class="chip" href="${D.docs[r][0]}">${E(r)} · ${E(D.docs[r][1])}</a>` : `<span class="chip">${E(r)}</span>`).join('');
+  const notes = t.m || t.p.length ? `<details data-i="${t.id}"><summary>Notes${t.d.length ? ' et ' + t.d.length + ' diapositives' : ''}</summary>
+    <p class="note">Notes générées par la Médiathèque SFR : à reformuler, chiffres à confirmer avant tout ajout dans un résumé.</p>
+    ${t.m ? `<p>${hl(t.m, w)}</p>` : ''}${t.p.length ? `<b>Points d’enseignement</b><ul>${t.p.map(x => `<li>${hl(x, w)}</li>`).join('')}</ul>` : ''}
+    ${t.v.length ? `<b>Points de vigilance</b><ul>${t.v.map(x => `<li>${hl(x, w)}</li>`).join('')}</ul>` : ''}${t.c ? `<p><b>Conclusion.</b> ${hl(t.c, w)}</p>` : ''}
+    <div class="slides"></div></details>` : (t.d.length ? `<details data-i="${t.id}"><summary>${t.d.length} diapositives</summary><div class="slides"></div></details>` : '');
+  return `<div class="res" id="t-${t.id}"><h3><a href="${t.l}" target="_blank" rel="noreferrer">${hl(t.t, w)}</a></h3><p class="muted" style="margin:0">${meta}</p>
+    ${chips ? `<div class="chips">${chips}</div>` : ''}${notes}</div>`;
+}
+function render() {
+  const w = words(), u = $('usage').value, ty = $('type').value, so = $('soc').value;
+  document.querySelectorAll('.tabs a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
+  ['usage', 'type', 'soc'].forEach(id => $(id).classList.toggle('hidden', tab !== 't'));
+  if (tab === 't') {
+    let L = D.talks.filter(t => (!u || (u === 'r' ? t.r.length : t.d.length)) && (!ty || t.ty === ty) && (!so || t.so === so) && (!w.length || match(t.fa, w)));
+    if (w.length) L = L.map(t => [t, w.filter(x => t.ft.includes(x)).length * 10 + (t.r.length ? 1 : 0)]).sort((a, b) => b[1] - a[1]).map(x => x[0]);
+    $('count').textContent = L.length + ' présentation' + (L.length > 1 ? 's' : '') + (L.length > 200 ? ' (200 premières affichées)' : '');
+    $('out').innerHTML = L.slice(0, 200).map(t => talkHtml(t, w)).join('');
+  } else {
+    const L = D.pass.filter(p => !w.length || match(p.fa, w));
+    $('count').textContent = L.length + ' passage' + (L.length > 1 ? 's' : '') + (L.length > 400 ? ' (400 premiers affichés)' : '');
+    $('out').innerHTML = L.slice(0, 400).map(p => `<a class="res" style="display:block;text-decoration:none;color:var(--ink)" href="${p.h}">
+      <span class="muted">${E(p.dt)} · ${E(p.k)}</span><br><b>${hl(p.t, w)}</b><br><span style="font-size:14.5px">${hl(p.x, w)}</span></a>`).join('');
+  }
+}
+document.addEventListener('toggle', e => { const d = e.target; if (!d.open || !d.dataset || !d.dataset.i || d.dataset.done) return; d.dataset.done = 1;
+  const t = D.talks.find(x => x.id === d.dataset.i); d.querySelector('.slides').innerHTML = t.d.map(s => `<a href="${s}" target="_blank"><img loading="lazy" src="${s}" alt=""></a>`).join(''); }, true);
+document.querySelectorAll('.tabs a').forEach(a => a.onclick = () => { tab = a.dataset.tab; render(); });
+let tm; $('q').oninput = () => { clearTimeout(tm); tm = setTimeout(render, 150); };
+['usage', 'type', 'soc'].forEach(id => $(id).onchange = render);
+render();
+if (location.hash.startsWith('#t-')) { const id = location.hash.slice(3), i = D.talks.findIndex(t => t.id === id);
+  if (i >= 200) { $('out').insertAdjacentHTML('afterbegin', talkHtml(D.talks[i], [])); }
+  const el = document.getElementById('t-' + id); if (el) { el.scrollIntoView(); const d = el.querySelector('details'); if (d) d.open = true; } }
+</script></main>
+<footer class="wrap foot">Version complète à accès privé — usage personnel de révision uniquement. Les figures des ouvrages et des cours restent la propriété de leurs auteurs et éditeurs ; ne pas diffuser.</footer>
+<script>document.getElementById('themebtn').onclick = function () {
+  var d = document.documentElement, cur = d.dataset.theme || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'), nx = cur === 'dark' ? 'light' : 'dark';
+  d.dataset.theme = nx; try { localStorage.setItem('dems_theme', JSON.stringify(nx)); } catch (e) {} };</script>
+</body></html>
